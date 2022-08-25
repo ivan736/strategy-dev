@@ -5,8 +5,10 @@ subgidSize=$(( $(podman info --format "{{ range .Host.IDMappings.GIDMap }}+{{.Si
 uid=1000
 gid=100
 
-podman run -d -p 8888:8888 \
+podman run -d \
+    --pod fp \
     --name notebook \
+    --tz local \
     -e GRANT_SUDO=yes \
     -e JUPYTER_TOKEN=ivan123 \
     -v "$(pwd):/home/jovyan/work" \
