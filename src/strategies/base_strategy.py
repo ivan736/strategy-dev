@@ -1,13 +1,27 @@
+import datetime
 from abc import abstractmethod
+from collections import defaultdict
 
-import backtrader as bt
-from indicators.base_indicators import *
 from loguru import logger
+import backtrader as bt
+
+OPEN_TIME = datetime.datetime.strptime('09:00', '%H:%M').time()
+CLOSE_TIME = datetime.datetime.strptime('13:45', '%H:%M').time()
+CLOSE_POISTION_TIME = datetime.datetime.strptime('13:40', '%H:%M').time()
+TRADES = defaultdict(int)
 
 
 class BaseStrategy(bt.Strategy):
     # only ma across
-    params = dict(period=20, stake=1, only_long=True)
+    params = dict(
+        period=20,
+        stake=1,
+        only_long=True,
+        open_time=OPEN_TIME,
+        close_time=CLOSE_TIME,
+        close_position_time=CLOSE_POISTION_TIME,
+        trade_limit=TRADES
+    )
 
     @abstractmethod
     def __init__(self):
@@ -17,6 +31,26 @@ class BaseStrategy(bt.Strategy):
         """Logging function for this strategy"""
         dt = dt or f'{self.datas[0].datetime.date(0)} {self.datas[0].datetime.time(0)}'
         logger.info(f'{dt}\t{txt}')
+
+    def _debug(self, data):
+        dt =  f'{self.datas[0].datetime.date(0)} {self.datas[0].datetime.time(0)}'
+        logger.debug(
+            f'{dt}\tOpen: {data.open[0]:8.1f}\tClose: {data.close[0]:8.1f}\tHigh: {data.high[0]:8.1f}\tLow: {data.low[0]:8.1f}'
+        )
+
+
+    def _filter_time(self):
+        if self.datas[0].datetime.time(0) < OPEN_TIME or self.datas[0].datetime.time(0) > CLOSE_POISTION_TIME:
+            return True
+        else:
+            return False
+
+    def _filter_trade_times(self):
+        if not self.p.trade_limit[self.datas[0].datetime.date(0)]:
+            self.p.trade_limit[self.datas[0].datetime.date(0)] += 1
+            return False
+        else:
+            return True
 
     def notify_order(self, order):
         if order.status in [order.Submitted, order.Accepted]:
@@ -45,16 +79,6 @@ class BaseStrategy(bt.Strategy):
 
         # self.order = None
 
+    @abstractmethod
     def next(self):
-        if self.buy_signal:
-            if not self.position:
-                self.buy(size=self.p.stake)
-
-        if self.sell_signal:
-            if self.position:
-                self.close()
-
-    def _debug(self, data):
-        logger.debug(
-            f'Open: {data.open[0]:8.1f}\tClose: {data.close[0]:8.1f}\tHigh: {data.high[0]:8.1f}\tLow: {data.low[0]:8.1f}'
-        )
+        pass
