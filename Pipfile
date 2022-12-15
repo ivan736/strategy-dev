@@ -1,0 +1,22 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+influxdb-client = "*"
+beautifulsoup4 = "*"
+loguru = "*"
+finmind = "*"
+pyarrow = "*"
+tqdm = "*"
+requests = "*"
+shioaji = "*"
+backtrader = "*"
+backtrader-plotting = "*"
+python-dotenv = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.7"
